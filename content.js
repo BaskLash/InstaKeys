@@ -1,5 +1,41 @@
 let isScrolling = false;
 
+// --- ONBOARDING OVERLAY FUNKTION ---
+function showOnboarding() {
+  if (localStorage.getItem("addon_onboarding_done")) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = "scroll-onboarding";
+  overlay.style = `
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #1a1a1a; color: white; padding: 25px; border-radius: 15px;
+    border: 2px solid red; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); text-align: center;
+    min-width: 300px;
+  `;
+  
+  overlay.innerHTML = `
+    <h2 style="margin-top:0; color: red;">Controls Active!</h2>
+    <p>Use your keyboard to navigate:</p>
+    <div style="text-align: left; background: #222; padding: 10px; border-radius: 8px; margin: 15px 0;">
+      <p><b>↑ / ↓ Arrows:</b> Next / Previous post</p>
+      <p><b>X Key:</b> Like / Unlike post</p>
+    </div>
+    <button id="close-onboarding" style="
+      background: red; color: white; border: none; padding: 10px 20px; 
+      border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;
+    ">Got it!</button>
+  `;
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('close-onboarding').onclick = () => {
+    overlay.remove();
+    localStorage.setItem("addon_onboarding_done", "true");
+    focusPost(getCurrentPostIndex()); // Starts immediately
+  };
+}
+
 // Get all visible posts
 function getPosts() {
   return Array.from(document.querySelectorAll("article")).filter(post =>
@@ -38,10 +74,11 @@ function focusPost(index) {
 
   posts[index].scrollIntoView({ behavior: "smooth", block: "center" });
 
+  // Rahmen-Highlighting
   posts.forEach(p => (p.style.outline = ""));
   posts[index].style.outline = "3px solid red";
+  posts[index].style.outlineOffset = "-3px";
 
-  // Unlock after scroll settles
   setTimeout(() => {
     isScrolling = false;
   }, 500);
@@ -54,41 +91,27 @@ function likeCurrentPost() {
   const post = posts[index];
   if (!post) return;
 
-  // Find Like OR Unlike icon
   const icon = post.querySelector(
     'svg[aria-label="Like"], svg[aria-label="like"], svg[aria-label="Unlike"], svg[aria-label="unlike"]'
   );
 
-  if (!icon) {
-    console.log("⚠️ No like/unlike icon found");
-    return;
-  }
-
+  if (!icon) return;
   const button = icon.closest("button");
 
   if (button) {
     button.click();
-
-    const label = icon.getAttribute("aria-label");
-    if (label.toLowerCase() === "like") {
-      console.log("❤️ Liked post");
-    } else {
-      console.log("💔 Unliked post");
-    }
-
-  } else if (icon.parentElement) {
-    icon.parentElement.click();
-    console.log("🔁 Toggled like via parent element");
+    // Kleiner visueller Effekt beim Like
+    const originalOutline = post.style.outline;
+    post.style.outline = "5px solid white";
+    setTimeout(() => post.style.outline = originalOutline, 200);
   }
 }
 
 // Keyboard controls
 document.addEventListener("keydown", e => {
   if (isScrolling) return;
-
   if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
-
-  if (e.repeat) return; // prevent key hold spam
+  if (e.repeat) return;
 
   const posts = getPosts();
   if (!posts.length) return;
@@ -111,7 +134,8 @@ document.addEventListener("keydown", e => {
   }
 });
 
-// Start at current visible post
+// INITIALISIERUNG
 setTimeout(() => {
+  showOnboarding();
   focusPost(getCurrentPostIndex());
 }, 2000);
