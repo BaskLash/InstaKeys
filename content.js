@@ -125,20 +125,50 @@ function findCommentTextarea(post) {
   return (post && post.querySelector('textarea')) || document.querySelector('textarea');
 }
 
+function findActiveCommentTextarea() {
+  const textareas = Array.from(document.querySelectorAll("textarea"));
+
+  return textareas.find(t => {
+    const style = window.getComputedStyle(t);
+
+    return (
+      t.offsetParent !== null &&              // visible in layout
+      style.visibility !== "hidden" &&
+      style.display !== "none" &&
+      t.getBoundingClientRect().height > 0
+    );
+  }) || null;
+}
+
 // Poll briefly until the comment textarea is mounted and successfully focused
-function focusCommentTextarea(post) {
+function focusCommentTextarea() {
   let attempts = 0;
-  const maxAttempts = 20;
+  const maxAttempts = 50;
+
   const tryFocus = () => {
-    const textarea = findCommentTextarea(post);
+    const textarea = findActiveCommentTextarea();
+
     if (textarea) {
-      // Some Instagram inputs need a click to expand before they accept focus
+      textarea.scrollIntoView({ block: "center" });
+
       textarea.click();
-      textarea.focus();
+
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange?.(
+          textarea.value.length,
+          textarea.value.length
+        );
+      });
+
       if (document.activeElement === textarea) return;
     }
-    if (++attempts < maxAttempts) setTimeout(tryFocus, 75);
+
+    if (++attempts < maxAttempts) {
+      setTimeout(tryFocus, 50);
+    }
   };
+
   tryFocus();
 }
 
