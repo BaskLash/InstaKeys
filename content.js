@@ -89,22 +89,37 @@ function likeCurrentPost() {
   const posts = getPosts();
   const index = getCurrentPostIndex();
   const post = posts[index];
+
   if (!post) return;
 
+  // Find the Like SVG directly
   const icon = post.querySelector(
     'svg[aria-label="Like"], svg[aria-label="like"], svg[aria-label="Unlike"], svg[aria-label="unlike"]'
   );
 
-  if (!icon) return;
-  const button = icon.closest("button");
-
-  if (button) {
-    button.click();
-    // Kleiner visueller Effekt beim Like
-    const originalOutline = post.style.outline;
-    post.style.outline = "5px solid white";
-    setTimeout(() => post.style.outline = originalOutline, 200);
+  if (!icon) {
+    console.log("Like icon not found");
+    return;
   }
+
+  // Trigger realistic mouse events directly on the SVG
+  ["mousedown", "mouseup", "click"].forEach((type) => {
+    icon.dispatchEvent(
+      new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      })
+    );
+  });
+
+  // Visual feedback
+  const originalOutline = post.style.outline;
+  post.style.outline = "5px solid white";
+
+  setTimeout(() => {
+    post.style.outline = originalOutline;
+  }, 200);
 }
 
 // Keyboard controls

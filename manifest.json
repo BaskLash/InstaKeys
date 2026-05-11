@@ -3,7 +3,7 @@
 
   "manifest_version": 3,
   "name": "InstaKeys – Instagram Keyboard Scrolling & Like Shortcuts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Scroll Instagram posts with arrow keys and like posts instantly using your keyboard.",
   "permissions": [],
   "icons": {
