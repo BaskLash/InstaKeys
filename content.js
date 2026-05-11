@@ -190,7 +190,7 @@ function openCommentSection() {
     });
   }
 
-  focusCommentTextarea(post);
+  setTimeout(() => focusCommentTextarea(), 120);
 }
 
 // Submit the comment that is currently being typed
